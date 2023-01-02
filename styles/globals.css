@@ -46,5 +46,13 @@ a {
 }
 
 .leaflet-container {
-  height: 50vh;
+  @apply h-[50vh] sm:h-full;
+}
+
+.leaflet-popup-content p {
+  @apply m-1 !important;
+}
+
+ul {
+  @apply list-disc ml-3;
 }

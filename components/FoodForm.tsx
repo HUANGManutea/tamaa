@@ -1,24 +1,42 @@
 import { Listbox, Transition, Combobox, Switch } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import { OverpassNode } from 'overpass-ts';
 import { Fragment, useState } from 'react';
+import { Cuisine } from '../models/Cuisine';
 import { FoodFormData } from '../models/FoodFormData';
-import { Location } from '../models/Location';
+import { MerchantType } from '../models/MerchantType';
 import { Option } from '../models/Option';
+import { OverpassAPIData } from '../models/OverpassAPIData';
+import { OverpassQueryData } from '../models/OverpassQueryData';
 
 type FoodFormProps = {
-    foodFormData: FoodFormData | null,
-    setFoodFormData: Function,
+    apiData: OverpassAPIData | null,
+    setApiData: Function,
+    location: OverpassNode | null,
+    setLocation: Function
 }
 
-const locations: Array<Location> = [
-    {name: "Tereva", lat: -17.54234, long: -149.56831},
-    {name: "Pamatai", lat: 0, long: 0},
-    {name: "Attique", lat: 0, long: 0},
+const locations: Array<OverpassNode> = [
+    {id: 1, type: "node", lat: -17.54234, lon: -149.56831, tags: {name: "Tereva"}},
+    {id: 2, type: "node", lat: -17.55303, lon: -149.59150, tags: {name: "Pamatai"}},
+    {id: 3, type: "node", lat: -17.54314, lon: -149.56808, tags: {name: "Attique"}},
 ];
 
-// const FoodCategories: Array<string> = [
-//     "burger"
-// ];
+const initialFoodCategories: Array<Option> = [
+    // {name: "Burger", enabled: true, type: "burger"}
+];
+
+const initialAmenities: Array<Option> = [
+    {name: "Restaurant", type: "restaurant", enabled: true},
+    {name: "Fast food", type: "fast_food", enabled: true},
+    {name: "Pub", type: "pub", enabled: true},
+    {name: "Café", type: "cafe", enabled: true},
+    {name: "Bar", type: "bar", enabled: true},
+    {name: "Glace", type: "ice_cream", enabled: true},
+    {name: "Boulangerie/Pâtisserie", type: "bakery|confectionery", enabled: true},
+    {name: "Magasin", type: "mall|supermarket", enabled: true},
+    {name: "Chocolat", type: "chocolate", enabled: true},
+];
 
 const updateOptionArray = (option: Option, originalOptions: Array<Option>) => {
     const copyOptions: Array<Option> = JSON.parse(JSON.stringify(originalOptions));
@@ -29,21 +47,58 @@ const updateOptionArray = (option: Option, originalOptions: Array<Option>) => {
     return copyOptions;
 }
 
-const foodFormToOverpassQuery = (foodFormData: FoodFormData) => {
-    const nodesStrings = foodFormData.merchantTypes.map(m => `node[amenity=${m.type}]({{bbox}});`);
-    const res = `(${nodesStrings.join('')});out;`;
+const foodFormToOverpassQueryData = (foodFormData: FoodFormData): OverpassQueryData => {
+    let cuisines : Array<Option> = [];
+    if (foodFormData.cuisines.length !== initialFoodCategories.length) {
+        cuisines = foodFormData.cuisines;
+    }
+    const res: OverpassQueryData = {
+        location: foodFormData.location,
+        radius: 300,
+        amenities: foodFormData.merchantTypes.map(m => m.type),
+        cuisines: cuisines.map(c => c.type)
+    };
+    
     return res;
+}
+
+const renderCuisineSelection = (cuisines: Array<Option>, setEnabledCuisines: Function) => {
+    if (cuisines.length === 0) return <></>;
+    return (
+        <div className="flex flex-col gap-2">
+            <span>Quel type de cuisine ?</span>
+            <div className="flex flex-row">
+                <div className="flex flex-col gap-2">
+                    {cuisines.map((cuisine,cuisineIdx) => (
+                        <Switch.Group key={`cuisine-${cuisineIdx}`}>
+                            <div className="flex justify-between">
+                                <Switch.Label className="mr-4">{cuisine.name}</Switch.Label>
+                                <Switch
+                                    checked={cuisine.enabled}
+                                    onChange={() => setEnabledCuisines(cuisine)}
+                                    className={`${
+                                        cuisine.enabled ? 'bg-blue-600' : 'bg-black'
+                                    } relative inline-flex h-6 w-11 items-center rounded-full`}>
+                                    <span
+                                    className={`${
+                                        cuisine.enabled ? 'translate-x-6' : 'translate-x-1'
+                                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                                    />
+                                </Switch>
+                            </div>
+                        </Switch.Group>
+                        ))}
+                </div>
+                <div className='flex flex-grow'></div>
+            </div>
+        </div>
+    );
 }
 
 export default function FoodForm(props: FoodFormProps) {
     const [selectedLocation, setSelectedLocation] = useState(locations[0]);
-    const [merchantTypes, setMerchantTypes] = useState<Array<Option>>([
-        {name: "Sur place", type: "restaurant", enabled: true},
-        {name: "A emporter", type: "fast_food", enabled: true},
-    ]);
-    const [cuisines, setCuisines] = useState<Array<Option>>([
-        {name: "Burger", enabled: true, type: "burger"}
-    ]);
+    const [merchantTypes, setMerchantTypes] = useState<Array<Option>>(initialAmenities);
+    const [cuisines, setCuisines] = useState<Array<Option>>(initialFoodCategories);
 
     const submitFoodForm = async (event: any) => {
         event.preventDefault();
@@ -52,9 +107,7 @@ export default function FoodForm(props: FoodFormProps) {
             merchantTypes: merchantTypes.filter(m => m.enabled),
             cuisines: cuisines.filter(c => c.enabled)
         };
-        const body = JSON.stringify({
-            queryString: foodFormToOverpassQuery(foodFormData)
-        });
+        const body = JSON.stringify(foodFormToOverpassQueryData(foodFormData));
         const res = await fetch('/api/overpass', {
             method: 'POST',
             headers: {
@@ -62,9 +115,10 @@ export default function FoodForm(props: FoodFormProps) {
             },
             body: body
         })
-        const data = await res.json();
-        console.log(data);
-        props.setFoodFormData(foodFormData)
+        let data = await res.json() as OverpassAPIData;
+        data.elements = [selectedLocation, ... data.elements];
+        props.setApiData(data);
+        props.setLocation(selectedLocation);
     }
 
     const setEnabledMerchantType = (option: Option) => {
@@ -85,7 +139,7 @@ export default function FoodForm(props: FoodFormProps) {
                     <Listbox value={selectedLocation} onChange={setSelectedLocation}>
                         <div className="relative mt-1">
                             <Listbox.Button className="relative w-full cursor-default rounded-lg bg-black py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
-                                <span className="block truncate">{selectedLocation.name}</span>
+                                <span className="block truncate">{selectedLocation.tags?.name}</span>
                                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                 <ChevronUpDownIcon
                                     className="h-5 w-5 text-gray-400"
@@ -117,7 +171,7 @@ export default function FoodForm(props: FoodFormProps) {
                                             selected ? 'font-medium' : 'font-normal'
                                             }`}
                                         >
-                                            {location.name}
+                                            {location.tags?.name}
                                         </span>
                                         {selected ? (
                                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
@@ -135,7 +189,7 @@ export default function FoodForm(props: FoodFormProps) {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <span>Sur place ? A emporter ?</span>
+                    <span>Type de lieu ?</span>
                     <div className="flex flex-row">
                         <div className="flex flex-col gap-2">
                             {merchantTypes.map((merchantType, merchantTypeIdx) => (
@@ -161,33 +215,7 @@ export default function FoodForm(props: FoodFormProps) {
                         <div className='flex flex-grow'></div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                    <span>Quel type de cuisine ?</span>
-                    <div className="flex flex-row">
-                        <div className="flex flex-col gap-2">
-                            {cuisines.map((cuisine,cuisineIdx) => (
-                                <Switch.Group key={`cuisine-${cuisineIdx}`}>
-                                    <div className="flex justify-between">
-                                        <Switch.Label className="mr-4">{cuisine.name}</Switch.Label>
-                                        <Switch
-                                            checked={cuisine.enabled}
-                                            onChange={() => setEnabledCuisines(cuisine)}
-                                            className={`${
-                                                cuisine.enabled ? 'bg-blue-600' : 'bg-black'
-                                            } relative inline-flex h-6 w-11 items-center rounded-full`}>
-                                            <span
-                                            className={`${
-                                                cuisine.enabled ? 'translate-x-6' : 'translate-x-1'
-                                            } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                                            />
-                                        </Switch>
-                                    </div>
-                                </Switch.Group>
-                                ))}
-                        </div>
-                        <div className='flex flex-grow'></div>
-                    </div>
-                </div>
+                {renderCuisineSelection(cuisines, setEnabledCuisines)}
                 
                 <div className='flex flex-col items-center'>
                     <button type="submit" className='app-button'>Chercher</button>

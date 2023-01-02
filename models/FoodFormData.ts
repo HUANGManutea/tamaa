@@ -1,9 +1,9 @@
+import { OverpassNode } from "overpass-ts";
 import { Cuisine } from "./Cuisine";
-import { Location } from "./Location";
 import { MerchantType } from "./MerchantType";
 
 export interface FoodFormData {
-    location: Location,
+    location: OverpassNode,
     merchantTypes: Array<MerchantType>,
     cuisines: Array<Cuisine>
 }
