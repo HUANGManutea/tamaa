@@ -1,9 +1,8 @@
 import dynamic from 'next/dynamic';
 import Head from 'next/head'
-import { OverpassJson, OverpassNode } from 'overpass-ts';
-import { useEffect, useState } from 'react'
+import { OverpassNode } from 'overpass-ts';
+import { useState } from 'react'
 import FoodForm from '../components/FoodForm'
-import { FoodFormData } from '../models/FoodFormData';
 import { OverpassAPIData } from '../models/OverpassAPIData';
 
 

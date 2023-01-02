@@ -1,10 +1,8 @@
-import { Listbox, Transition, Combobox, Switch } from '@headlessui/react';
+import { Listbox, Transition, Switch } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import { OverpassNode } from 'overpass-ts';
 import { Fragment, useState } from 'react';
-import { Cuisine } from '../models/Cuisine';
 import { FoodFormData } from '../models/FoodFormData';
-import { MerchantType } from '../models/MerchantType';
 import { Option } from '../models/Option';
 import { OverpassAPIData } from '../models/OverpassAPIData';
 import { OverpassQueryData } from '../models/OverpassQueryData';

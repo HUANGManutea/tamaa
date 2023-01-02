@@ -1,13 +1,4 @@
 import { useEffect, useRef } from "react";
-import {
-    MapContainer,
-    TileLayer,
-    Marker,
-    Popup,
-    GeoJSON,
-    CircleMarker,
-    LayerGroup,
-  } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
