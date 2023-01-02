@@ -6,12 +6,14 @@ import { FoodFormData } from '../models/FoodFormData';
 import { Option } from '../models/Option';
 import { OverpassAPIData } from '../models/OverpassAPIData';
 import { OverpassQueryData } from '../models/OverpassQueryData';
+import Slider from './Slider';
 
 type FoodFormProps = {
-    apiData: OverpassAPIData | null,
     setApiData: Function,
-    location: OverpassNode | null,
-    setLocation: Function
+    setLocation: Function,
+    radius: number,
+    setRadius: Function,
+    setLoading: Function
 }
 
 const locations: Array<OverpassNode> = [
@@ -45,14 +47,14 @@ const updateOptionArray = (option: Option, originalOptions: Array<Option>) => {
     return copyOptions;
 }
 
-const foodFormToOverpassQueryData = (foodFormData: FoodFormData): OverpassQueryData => {
+const foodFormToOverpassQueryData = (foodFormData: FoodFormData, radius: number): OverpassQueryData => {
     let cuisines : Array<Option> = [];
     if (foodFormData.cuisines.length !== initialFoodCategories.length) {
         cuisines = foodFormData.cuisines;
     }
     const res: OverpassQueryData = {
         location: foodFormData.location,
-        radius: 300,
+        radius: radius,
         amenities: foodFormData.merchantTypes.map(m => m.type),
         cuisines: cuisines.map(c => c.type)
     };
@@ -100,12 +102,13 @@ export default function FoodForm(props: FoodFormProps) {
 
     const submitFoodForm = async (event: any) => {
         event.preventDefault();
+        props.setLoading(true);
         const foodFormData = {
             location: selectedLocation,
             merchantTypes: merchantTypes.filter(m => m.enabled),
             cuisines: cuisines.filter(c => c.enabled)
         };
-        const body = JSON.stringify(foodFormToOverpassQueryData(foodFormData));
+        const body = JSON.stringify(foodFormToOverpassQueryData(foodFormData, props.radius));
         const res = await fetch('/api/overpass', {
             method: 'POST',
             headers: {
@@ -117,6 +120,7 @@ export default function FoodForm(props: FoodFormProps) {
         data.elements = [selectedLocation, ... data.elements];
         props.setApiData(data);
         props.setLocation(selectedLocation);
+        props.setLoading(false);
     }
 
     const setEnabledMerchantType = (option: Option) => {
@@ -184,6 +188,10 @@ export default function FoodForm(props: FoodFormProps) {
                             </Transition>
                         </div>
                     </Listbox>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <span>Quelle distance max ?</span>
+                    <Slider value={props.radius} setValue={props.setRadius}></Slider>
                 </div>
 
                 <div className="flex flex-col gap-2">

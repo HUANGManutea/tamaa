@@ -7,6 +7,7 @@ import { OverpassNode } from "overpass-ts";
 
 type MapProps = {
     center: Array<number>,
+    radius: number,
     elements: Array<OverpassNode>
 };
 
@@ -86,6 +87,7 @@ export default function Map(props: MapProps) {
         map = new L.Map("map", {
             center: [props.center[0], props.center[1]],
             zoom: 20,
+            scrollWheelZoom: false,
             layers: [
                 new L.TileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -103,10 +105,11 @@ export default function Map(props: MapProps) {
             if (i === 0) {
                 icon = blueIcon;
             }
-            const marker = L.marker([element.lat, element.lon], {title: element.tags!!.name, icon: icon})
+            L.marker([element.lat, element.lon], {title: element.tags!!.name, icon: icon})
                 .addTo(layerGroup)
                 .bindPopup(getPopupContent(element));
         })
+        L.circle([props.center[0], props.center[1]]).setRadius(props.radius).addTo(layerGroup);
     };
 
     return (
