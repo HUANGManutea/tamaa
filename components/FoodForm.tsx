@@ -19,6 +19,7 @@ type FoodFormProps = {
 const locations: Array<OverpassNode> = [
     {id: 1, type: "node", lat: -17.54234, lon: -149.56831, tags: {name: "Tereva"}},
     {id: 2, type: "node", lat: -17.55303, lon: -149.59150, tags: {name: "Pamatai"}},
+    {id: 2, type: "node", lat: -17.5418578, lon: -149.5716090, tags: {name: "Bruat"}},
     {id: 3, type: "node", lat: -17.54314, lon: -149.56808, tags: {name: "Attique"}},
 ];
 
@@ -109,7 +110,7 @@ export default function FoodForm(props: FoodFormProps) {
             cuisines: cuisines.filter(c => c.enabled)
         };
         const body = JSON.stringify(foodFormToOverpassQueryData(foodFormData, props.radius));
-        const res = await fetch('/api/overpass', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/overpass`, {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"

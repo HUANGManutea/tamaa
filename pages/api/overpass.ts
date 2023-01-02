@@ -3,6 +3,24 @@ import { overpass, OverpassNode, OverpassWay } from 'overpass-ts';
 import { OverpassQueryData } from '../../models/OverpassQueryData';
 import type { OverpassJson } from "overpass-ts";
 import { OverpassAPIData } from '../../models/OverpassAPIData';
+import cacheData from "memory-cache";
+
+const fetchWithCache = async (formattedQuery: string) : Promise<OverpassJson> => {
+  const value = cacheData.get(formattedQuery);
+    if (value) {
+        return value;
+    } else {
+        const hours = 24;
+        console.log("cache miss, querying overpass API");
+        const resOverpass = await overpass(formattedQuery, {
+          endpoint: 'http://overpass-api.de/api/interpreter'
+        });
+        console.log("query done");
+        const data = await resOverpass.json() as OverpassJson;
+        cacheData.put(formattedQuery, data, hours * 1000 * 60 * 60);
+        return data;
+    }
+}
 
 const getNodeQuery = (data: OverpassQueryData, amenities: string | null = null, shops: string | null = null) => {
   if (amenities != null) {
@@ -41,6 +59,7 @@ export default async function handler(
   res: NextApiResponse<OverpassAPIData>
 ) {
   const overpassQueryData: OverpassQueryData = req.body;
+  console.log(`received overpassQueryData: ${overpassQueryData}`);
   const rawAmenity = overpassQueryData.amenities.join('|').split('|');
   const amenities = rawAmenity.filter(a => shopList.indexOf(a) === -1).join('|');
   const shops = rawAmenity.filter(a => shopList.indexOf(a) > -1).join('|');
@@ -57,8 +76,8 @@ export default async function handler(
 
   const formattedQuery = `[out:json];${formattedNodeQueryAmenities}${formattedNodeQueryShops}${formattedWayQueryAmenities}${formattedWayQueryShops}`;
   // console.log(formattedQuery);
-  const resOverpass = await overpass(formattedQuery);
-  const data = await resOverpass.json() as OverpassJson;
+  const data = await fetchWithCache(formattedQuery);
+  console.log(`received data from overpass API: ${data}`);
 
   elements = data.elements.filter(e => e.type === "node").map(e => e as OverpassNode).filter(e => e.tags?.name != null);
 
