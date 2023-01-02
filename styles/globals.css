@@ -44,3 +44,7 @@ a {
 .app-button {
   @apply p-2 border-solid border-2 rounded-md sm:p-3 border-blue-600;
 }
+
+.leaflet-container {
+  height: 50vh;
+}

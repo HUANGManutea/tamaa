@@ -11,7 +11,7 @@ type FoodFormProps = {
 }
 
 const locations: Array<Location> = [
-    {name: "Tereva", lat: 0, long: 0},
+    {name: "Tereva", lat: -17.54234, long: -149.56831},
     {name: "Pamatai", lat: 0, long: 0},
     {name: "Attique", lat: 0, long: 0},
 ];
@@ -29,6 +29,12 @@ const updateOptionArray = (option: Option, originalOptions: Array<Option>) => {
     return copyOptions;
 }
 
+const foodFormToOverpassQuery = (foodFormData: FoodFormData) => {
+    const nodesStrings = foodFormData.merchantTypes.map(m => `node[amenity=${m.type}]({{bbox}});`);
+    const res = `(${nodesStrings.join('')});out;`;
+    return res;
+}
+
 export default function FoodForm(props: FoodFormProps) {
     const [selectedLocation, setSelectedLocation] = useState(locations[0]);
     const [merchantTypes, setMerchantTypes] = useState<Array<Option>>([
@@ -39,13 +45,26 @@ export default function FoodForm(props: FoodFormProps) {
         {name: "Burger", enabled: true, type: "burger"}
     ]);
 
-    const submitFoodForm = (event: any) => {
+    const submitFoodForm = async (event: any) => {
         event.preventDefault();
-        props.setFoodFormData({
+        const foodFormData = {
             location: selectedLocation,
             merchantTypes: merchantTypes.filter(m => m.enabled),
             cuisines: cuisines.filter(c => c.enabled)
+        };
+        const body = JSON.stringify({
+            queryString: foodFormToOverpassQuery(foodFormData)
+        });
+        const res = await fetch('/api/overpass', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: body
         })
+        const data = await res.json();
+        console.log(data);
+        props.setFoodFormData(foodFormData)
     }
 
     const setEnabledMerchantType = (option: Option) => {

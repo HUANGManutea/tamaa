@@ -1,4 +1,5 @@
 import { Cuisine } from "./Cuisine";
+import { Location } from "./Location";
 import { MerchantType } from "./MerchantType";
 
 export interface FoodFormData {
