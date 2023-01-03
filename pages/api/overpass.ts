@@ -113,7 +113,6 @@ export default async function handler(
   const formattedQuery = `[out:json];${formattedNodeQueryAmenities}${formattedNodeQueryShops}${formattedWayQueryAmenities}${formattedWayQueryShops}`;
   // console.log(formattedQuery);
   const data = await fetchWithCache(formattedQuery);
-  console.log(`received data from overpass API: ${data}`);
 
   elements = data.elements.filter(e => e.type === "node" && e.tags?.name != null)
     .map(e => {
