@@ -63,8 +63,8 @@ export default function Map(props: MapProps) {
     let layerGroup: L.LayerGroup | null = null;
 
     const blueIcon = new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconUrl: "../assets/markerIconBlue.png",
+        shadowUrl: '../assets/markerShadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
@@ -72,8 +72,8 @@ export default function Map(props: MapProps) {
     });
 
     const redIcon = new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconUrl: "../assets/markerIconRed.png",
+        shadowUrl: '../assets/markerShadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
