@@ -8,6 +8,8 @@ import { OverpassAPIData } from '../models/OverpassAPIData';
 import { OverpassQueryData } from '../models/OverpassQueryData';
 import Slider from './Slider';
 
+import {initialLocations, initialAmenities, initialFoodCategories} from '../models/InitialData';
+
 type FoodFormProps = {
     setApiData: Function,
     setLocation: Function,
@@ -15,29 +17,6 @@ type FoodFormProps = {
     setRadius: Function,
     setLoading: Function
 }
-
-const locations: Array<OverpassNode> = [
-    {id: 1, type: "node", lat: -17.54234, lon: -149.56831, tags: {name: "Tereva"}},
-    {id: 2, type: "node", lat: -17.55303, lon: -149.59150, tags: {name: "Pamatai"}},
-    {id: 2, type: "node", lat: -17.5418578, lon: -149.5716090, tags: {name: "Bruat"}},
-    {id: 3, type: "node", lat: -17.54314, lon: -149.56808, tags: {name: "Attique"}},
-];
-
-const initialFoodCategories: Array<Option> = [
-    // {name: "Burger", enabled: true, type: "burger"}
-];
-
-const initialAmenities: Array<Option> = [
-    {name: "Restaurant", type: "restaurant", enabled: true},
-    {name: "Fast food", type: "fast_food", enabled: true},
-    {name: "Pub", type: "pub", enabled: true},
-    {name: "Café", type: "cafe", enabled: true},
-    {name: "Bar", type: "bar", enabled: true},
-    {name: "Glace", type: "ice_cream", enabled: true},
-    {name: "Boulangerie/Pâtisserie", type: "bakery|confectionery", enabled: true},
-    {name: "Magasin", type: "mall|supermarket", enabled: true},
-    {name: "Chocolat", type: "chocolate", enabled: true},
-];
 
 const updateOptionArray = (option: Option, originalOptions: Array<Option>) => {
     const copyOptions: Array<Option> = JSON.parse(JSON.stringify(originalOptions));
@@ -97,7 +76,7 @@ const renderCuisineSelection = (cuisines: Array<Option>, setEnabledCuisines: Fun
 }
 
 export default function FoodForm(props: FoodFormProps) {
-    const [selectedLocation, setSelectedLocation] = useState(locations[0]);
+    const [selectedLocation, setSelectedLocation] = useState(initialLocations[0]);
     const [merchantTypes, setMerchantTypes] = useState<Array<Option>>(initialAmenities);
     const [cuisines, setCuisines] = useState<Array<Option>>(initialFoodCategories);
 
@@ -119,6 +98,7 @@ export default function FoodForm(props: FoodFormProps) {
         })
         let data = await res.json() as OverpassAPIData;
         data.elements = [selectedLocation, ... data.elements];
+        console.log(data);
         props.setApiData(data);
         props.setLocation(selectedLocation);
         props.setLoading(false);
@@ -135,7 +115,7 @@ export default function FoodForm(props: FoodFormProps) {
     }
 
     return (
-        <form onSubmit={submitFoodForm} className="rounded px-8 pt-6 pb-8 mb-4 border border-white bg-gray-700">
+        <form onSubmit={submitFoodForm} className="app-control-container">
             <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-2">
                     <span>Où es-tu ?</span>
@@ -157,7 +137,7 @@ export default function FoodForm(props: FoodFormProps) {
                                 leaveTo="opacity-0"
                             >
                                 <Listbox.Options className="absolute z-10  mt-1 max-h-60 w-full overflow-auto rounded-md bg-black py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                {locations.map((location, locationIdx) => (
+                                {initialLocations.map((location, locationIdx) => (
                                     <Listbox.Option
                                     key={`location-${locationIdx}`}
                                     className={({ active }) =>

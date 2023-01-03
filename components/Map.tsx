@@ -3,12 +3,14 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
-import { OverpassNode } from "overpass-ts";
+
+import {initialLocations} from '../models/InitialData';
+import { OverpassNodeExt } from "../models/OverpassNodeExt";
 
 type MapProps = {
     center: Array<number>,
     radius: number,
-    elements: Array<OverpassNode>
+    elements: Array<OverpassNodeExt>
 };
 
 const overpassKeyToString: Record<string, string> = {
@@ -32,7 +34,7 @@ const getOverpassKeyToString = (key: string) => {
     }
 }
 
-const getPopupContent = (element: OverpassNode) => {
+const getPopupContent = (element: OverpassNodeExt) => {
     let cuisineHTMLElement = '';
     if (element.tags?.cuisine) {
         cuisineHTMLElement = "<ul>";
@@ -51,6 +53,7 @@ const getPopupContent = (element: OverpassNode) => {
         </div>
     `;
 }
+
 
 export default function Map(props: MapProps) {
     const ZOOM_LEVEL = 9;
@@ -77,6 +80,12 @@ export default function Map(props: MapProps) {
         shadowSize: [41, 41]
     });
 
+    const getIcon = (element: OverpassNodeExt) => {
+        if (initialLocations.find(node => node.tags?.name === element.tags?.name)) {
+            return blueIcon;
+        }
+        return redIcon;
+    }
 
     useEffect(() => {
         var container = L.DomUtil.get("map");
@@ -86,7 +95,7 @@ export default function Map(props: MapProps) {
         
         map = new L.Map("map", {
             center: [props.center[0], props.center[1]],
-            zoom: 20,
+            zoom: 16,
             scrollWheelZoom: false,
             layers: [
                 new L.TileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -96,16 +105,12 @@ export default function Map(props: MapProps) {
         });
         layerGroup = L.layerGroup().addTo(map);
         updateMarkers(layerGroup, props.elements);
-    }, [map, props.elements]);
+    }, [map, props.elements, props.center]);
 
-    const updateMarkers = (layerGroup: L.LayerGroup, elements: Array<OverpassNode>) => {
+    const updateMarkers = (layerGroup: L.LayerGroup, elements: Array<OverpassNodeExt>) => {
         layerGroup.clearLayers();
-        elements.forEach((element, i) => {
-            let icon = redIcon;
-            if (i === 0) {
-                icon = blueIcon;
-            }
-            L.marker([element.lat, element.lon], {title: element.tags!!.name, icon: icon})
+        elements.forEach((element) => {
+            L.marker([element.lat, element.lon], {title: element.tags!!.name, icon: getIcon(element)})
                 .addTo(layerGroup)
                 .bindPopup(getPopupContent(element));
         })
@@ -113,7 +118,7 @@ export default function Map(props: MapProps) {
     };
 
     return (
-        <div className="flex flex-col flex-grow">
+        <div className="flex flex-col">
             <div id="map"></div>
         </div>
     );

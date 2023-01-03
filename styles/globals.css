@@ -26,6 +26,14 @@ body {
   overflow-x: hidden;
 }
 
+html,
+body,
+body > div:first-child,
+div#__next,
+div#__next > div {
+  height: 100%;
+}
+
 body {
   @apply h-full bg-gray-800 text-white;
 }
@@ -46,7 +54,7 @@ a {
 }
 
 .leaflet-container {
-  @apply h-[50vh] sm:h-full;
+  @apply h-[50vh] sm:h-[75vh];
 }
 
 .leaflet-popup-content p {
@@ -55,4 +63,8 @@ a {
 
 ul {
   @apply list-disc ml-3;
+}
+
+.app-control-container {
+  @apply rounded px-8 pt-6 pb-8 mb-4 border border-white bg-gray-700;
 }

@@ -1,5 +1,5 @@
-import { OverpassNode } from "overpass-ts"
+import { OverpassNodeExt } from "./OverpassNodeExt"
 
 export type OverpassAPIData = {
-    elements : Array<OverpassNode>
+    elements : Array<OverpassNodeExt>
   }
