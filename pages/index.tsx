@@ -1,44 +1,13 @@
-import dynamic from 'next/dynamic';
+import { Switch } from '@headlessui/react';
 import Head from 'next/head'
-import { OverpassNode } from 'overpass-ts';
-import { useEffect, useState } from 'react'
-import FoodForm from '../components/FoodForm'
-import ResultWrapper from '../components/ResultWrapper';
-import { OverpassAPIData } from '../models/OverpassAPIData';
-import { OverpassNodeExt } from '../models/OverpassNodeExt';
+import { useState } from 'react'
+import GoogleMapView from '../components/GoogleMapView';
+import OpenStreetMapView from '../components/OpenStreetMapView';
 
 
 export default function Home() {
-  const [apiData, setApiData] = useState<OverpassAPIData | null>(null);
-  const [location, setLocation] = useState<OverpassNodeExt | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [radius, setRadius] = useState<number>(300);
-  const [memoryApiData, setMemoryApiData] = useState<OverpassAPIData>({} as OverpassAPIData);
-  const [initialized, setInitialized] = useState<boolean>(false);
-  const [nearestPlaceIndex, setNearestPlaceIndex] = useState<number>(1);
+  const [isGoogleMaps, setIsGoogleMaps] = useState<boolean>(true);
 
-  const setElements = (elements: Array<OverpassNodeExt>) => {
-    if (initialized) {
-      setApiData({
-        ...apiData,
-        elements: elements
-      });
-    }
-  }
-
-  const setProxyApiData = (data: OverpassAPIData) => {
-    setApiData(data);
-    const copyApiData: OverpassAPIData = JSON.parse(JSON.stringify(data));
-    setMemoryApiData(copyApiData);
-    setInitialized(true);
-  }
-
-  const revertChanges = () => {
-    if (initialized) {
-      setNearestPlaceIndex(1);
-      setApiData(memoryApiData);
-    }
-  }
 
   return (
     <>
@@ -50,24 +19,28 @@ export default function Home() {
       </Head>
       <div className='flex flex-col h-full gap-5'>
         <h1 className='text-2xl text-center'>Tama'a</h1>
-        <div className='flex flex-col sm:flex-row justify-between h-full mx-auto sm:m-0 sm:px-20 gap-5'>
-          <FoodForm setApiData={setProxyApiData} setLocation={setLocation} radius={radius} setRadius={setRadius} setLoading={setLoading}></FoodForm>
-          {apiData && location ?
-            <ResultWrapper location={location} elements={apiData.elements} memoryElements={memoryApiData.elements} radius={radius} setElements={setElements} nearestPlaceIndex={nearestPlaceIndex} setNearestPlaceIndex={setNearestPlaceIndex} revertChanges={revertChanges}></ResultWrapper> // we have data
-            :
-            loading ?
-                <div className='flex flex-row grow h-screen justify-center items-center gap-2'>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <p className='text-center'>Chargement</p>
-                </div> // we are fetching data
-              :
-              <div className='flex flex-col grow justify-center'>
-                <p className='text-center'>Cliquez sur "Chercher"</p>
-                </div> // no fetch and no data
-            }
+        <div className='flex flex-col h-full mx-auto gap-5 sm:m-0 sm:px-20'>
+          <div className='flex flex-row justify-center'>
+            <Switch.Group>
+                <div className="flex justify-between">
+                    <Switch.Label className="mr-4">Open Street Map</Switch.Label>
+                    <Switch
+                        checked={isGoogleMaps}
+                        onChange={() => setIsGoogleMaps(!isGoogleMaps)}
+                        className={`${
+                          isGoogleMaps ? 'bg-blue-600' : 'bg-black'
+                        } relative inline-flex h-6 w-11 items-center rounded-full`}>
+                        <span
+                        className={`${
+                          isGoogleMaps ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                        />
+                    </Switch>
+                    <Switch.Label className="ml-4">Google Maps</Switch.Label>
+                </div>
+            </Switch.Group>
+          </div>
+          {isGoogleMaps ? <GoogleMapView></GoogleMapView> : <OpenStreetMapView></OpenStreetMapView>}
         </div>
       </div>
     </>
